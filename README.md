@@ -1,2 +1,2 @@
 # aws_deploy
-A toolset for administrating the DrupalCI stack on AWS
+A toolset for managing the DrupalCI stack on AWS
