@@ -1,20 +1,20 @@
 package main
 
 import (
-	"fmt"
-
 	"gopkg.in/alecthomas/kingpin.v1"
-	"github.com/awslabs/aws-sdk-go/aws"
-    //"github.com/awslabs/aws-sdk-go/service/ec2"
-    "github.com/awslabs/aws-sdk-go/service/elb"
+	"github.com/mitchellh/goamz/aws"
+    "github.com/mitchellh/goamz/elb"
+    "github.com/mitchellh/goamz/ec2"
+    "github.com/mitchellh/multistep"
 )
 
 var (
-	elbId  = kingpin.Flag("elb", "Identifier for the Elastic Load Balancer.").Required().String()
-	amiId  = kingpin.Flag("ami", "Identifier for the Image to be deployed.").Required().String()
-	count  = kingpin.Flag("num", "The amount of instances to be delpoyed.").Default("1").String()
-	tags   = kingpin.Flag("tag", "Tag the environment's for billing purposes.").Required().String()
-	region = kingpin.Flag("region", "Deploy the images to a Region.").Required().String()
+	elbId    = kingpin.Flag("elb", "Identifier for the Elastic Load Balancer.").Required().String()
+	amiId    = kingpin.Flag("ami", "Identifier for the Image to be deployed.").Required().String()
+	size     = kingpin.Flag("size", "The size of the instance.").Default("t2.medium").String()
+	tags     = kingpin.Flag("tag", "Tag the environment's for billing purposes.").Required().String()
+	region   = kingpin.Flag("region", "Deploy the images to a Region.").Default("us-east-1").String()
+	security = kingpin.Flag("security", "The security group.").Default("default").String()
 )
 
 func main() {
@@ -22,24 +22,30 @@ func main() {
 	kingpin.CommandLine.Help = "AWS deployment tools."
 	kingpin.Parse()
 
-    clientElb := elb.New(&aws.Config{Region: *region})
+	auth, err := aws.EnvAuth()
+  	Check(err)
 
-    // Do we have an ELB with this ID.
-    query := &elb.DescribeLoadBalancersInput{
-    	LoadBalancerNames: []*string {elbId},
-    }
+	state := new(multistep.BasicStateBag)
 
-    elbs, err := clientElb.DescribeLoadBalancers(query)
-    if err != nil {
-        panic(err)
-    }
+	// This allows us to share our client connections while in each of the steps.
+	state.Put("client_elb", elb.New(auth, aws.APSoutheast2))
+	state.Put("client_ec2", ec2.New(auth, aws.APSoutheast2))
 
-    // resp has all of the response data, pull out instance IDs:
-    fmt.Println("> Number of reservation sets: ", len(elbs.LoadBalancerDescriptions))
-    for idx, res := range elbs.LoadBalancerDescriptions {
-        fmt.Println("  > Number of instances: ", len(res.Instances))
-        for _, inst := range elbs.LoadBalancerDescriptions[idx].Instances {
-            fmt.Println("    - Instance ID: ", *inst.InstanceID)
-        }
+	// Standard configuration that has been passed in via the CLI.
+	state.Put("elb", *elbId)
+	state.Put("ami", *amiId)
+	state.Put("size", *size)
+	state.Put("region", aws.Regions[*region])
+
+	// @todo, Add these.
+	state.Put("security", *security)
+	state.Put("tags", *tags)
+
+
+    steps := []multistep.Step{
+        &StepDestroy{}, // Remove the existing hosts from the Load balancer.
+        &StepCreate{},  // Create some EC2 instances and ensure they are ready to be deployed.
     }
+    runner := &multistep.BasicRunner{Steps: steps}
+    runner.Run(state)
 }
