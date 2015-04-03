@@ -62,7 +62,7 @@ func buildTags(t string) []ec2.Tag {
         tagSplit := strings.Split(tag, "=")
         newTag := &ec2.Tag{
         	Key:   tagSplit[0],
-			Value: tagSplit[0],
+			Value: tagSplit[1],
         }
         tags = append(tags, *newTag)
     }
