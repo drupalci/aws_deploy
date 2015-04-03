@@ -19,14 +19,16 @@ func (s *StepCreate) Run(state multistep.StateBag) multistep.StepAction {
 	key := state.Get("key").(string)
 	size := state.Get("size").(string)
 	amount := state.Get("amount").(int)
+	security := state.Get("security").(string)
 
 	// Spin up the instances.
 	options := ec2.RunInstances{
-		ImageId:      ami,
-		KeyName:      key,
-		InstanceType: size,
-		MinCount:     amount,
-		MaxCount:     amount,
+		ImageId:        ami,
+		KeyName:        key,
+		InstanceType:   size,
+		SecurityGroups: ec2.SecurityGroupIds(security),
+		MinCount:       amount,
+		MaxCount:       amount,
 	}
 	resp, err := clientEc2.RunInstances(&options)
 	Check(err)

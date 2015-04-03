@@ -38,8 +38,6 @@ func main() {
 	state.Put("key", *key)
 	state.Put("size", *size)
 	state.Put("region", aws.Regions[*region])
-
-	// @todo, Add these.
 	state.Put("security", *security)
 	state.Put("tags", *tags)
 
