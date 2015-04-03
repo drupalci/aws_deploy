@@ -18,7 +18,7 @@ $ vagrant up
 
 ## Building
 
-All these comand should be run within the vm:
+All of these commands should be run within the vm:
 
 ```bash
 $ vagrant ssh
