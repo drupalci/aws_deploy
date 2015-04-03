@@ -1,11 +1,11 @@
 package main
 
 import (
-	"gopkg.in/alecthomas/kingpin.v1"
 	"github.com/mitchellh/goamz/aws"
-    "github.com/mitchellh/goamz/elb"
-    "github.com/mitchellh/goamz/ec2"
-    "github.com/mitchellh/multistep"
+	"github.com/mitchellh/goamz/ec2"
+	"github.com/mitchellh/goamz/elb"
+	"github.com/mitchellh/multistep"
+	"gopkg.in/alecthomas/kingpin.v1"
 )
 
 var (
@@ -23,7 +23,7 @@ func main() {
 	kingpin.Parse()
 
 	auth, err := aws.EnvAuth()
-  	Check(err)
+	Check(err)
 
 	state := new(multistep.BasicStateBag)
 
@@ -41,11 +41,10 @@ func main() {
 	state.Put("security", *security)
 	state.Put("tags", *tags)
 
-
-    steps := []multistep.Step{
-        &StepDestroy{}, // Remove the existing hosts from the Load balancer.
-        &StepCreate{},  // Create some EC2 instances and ensure they are ready to be deployed.
-    }
-    runner := &multistep.BasicRunner{Steps: steps}
-    runner.Run(state)
+	steps := []multistep.Step{
+		&StepDestroy{}, // Remove the existing hosts from the Load balancer.
+		&StepCreate{},  // Create some EC2 instances and ensure they are ready to be deployed.
+	}
+	runner := &multistep.BasicRunner{Steps: steps}
+	runner.Run(state)
 }

@@ -3,23 +3,23 @@ package main
 import (
 	"fmt"
 
-    "github.com/mitchellh/goamz/ec2"
-    "github.com/mitchellh/goamz/elb"
-    "github.com/mitchellh/multistep"
+	"github.com/mitchellh/goamz/ec2"
+	"github.com/mitchellh/goamz/elb"
+	"github.com/mitchellh/multistep"
 )
 
 type StepCreate struct{}
 
 func (s *StepCreate) Run(state multistep.StateBag) multistep.StepAction {
-    clientEc2 := state.Get("client_ec2").(*ec2.EC2)
-    clientElb := state.Get("client_elb").(*elb.ELB)
+	clientEc2 := state.Get("client_ec2").(*ec2.EC2)
+	clientElb := state.Get("client_elb").(*elb.ELB)
 
-    ami := state.Get("ami").(string)
-    size := state.Get("size").(string)
-    amount := state.Get("amount").(int)
+	ami := state.Get("ami").(string)
+	size := state.Get("size").(string)
+	amount := state.Get("amount").(int)
 
-    // Spin up the instances.
-    options := ec2.RunInstances{
+	// Spin up the instances.
+	options := ec2.RunInstances{
 		ImageId:      ami,
 		InstanceType: size,
 		MinCount:     amount,
@@ -33,16 +33,16 @@ func (s *StepCreate) Run(state multistep.StateBag) multistep.StepAction {
 		fmt.Println("Creating: ", instance.InstanceId)
 		add := &elb.RegisterInstancesWithLoadBalancer{
 			LoadBalancerName: *elbId,
-			Instances: []string{instance.InstanceId},
+			Instances:        []string{instance.InstanceId},
 		}
 		_, err = clientElb.RegisterInstancesWithLoadBalancer(add)
 		Check(err)
 	}
 
-    return multistep.ActionContinue
+	return multistep.ActionContinue
 }
 
 func (s *StepCreate) Cleanup(multistep.StateBag) {
-    // This is called after all the steps have run or if the runner is
-    // cancelled so that cleanup can be performed.
+	// This is called after all the steps have run or if the runner is
+	// cancelled so that cleanup can be performed.
 }
