@@ -16,12 +16,14 @@ func (s *StepCreate) Run(state multistep.StateBag) multistep.StepAction {
 	clientElb := state.Get("client_elb").(*elb.ELB)
 
 	ami := state.Get("ami").(string)
+	key := state.Get("key").(string)
 	size := state.Get("size").(string)
 	amount := state.Get("amount").(int)
 
 	// Spin up the instances.
 	options := ec2.RunInstances{
 		ImageId:      ami,
+		KeyName:      key,
 		InstanceType: size,
 		MinCount:     amount,
 		MaxCount:     amount,

@@ -11,6 +11,7 @@ import (
 var (
 	elbId    = kingpin.Flag("elb", "Identifier for the Elastic Load Balancer.").Required().String()
 	amiId    = kingpin.Flag("ami", "Identifier for the Image to be deployed.").Required().String()
+	key      = kingpin.Flag("key", "The ssh key used to access the environments.").Required().String()
 	size     = kingpin.Flag("size", "The size of the instance.").Default("t2.medium").String()
 	tags     = kingpin.Flag("tags", "Tag the environment's for billing purposes.").Required().String()
 	region   = kingpin.Flag("region", "Deploy the images to a Region.").Default("us-east-1").String()
@@ -34,6 +35,7 @@ func main() {
 	// Standard configuration that has been passed in via the CLI.
 	state.Put("elb", *elbId)
 	state.Put("ami", *amiId)
+	state.Put("key", *key)
 	state.Put("size", *size)
 	state.Put("region", aws.Regions[*region])
 
