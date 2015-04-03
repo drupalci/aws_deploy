@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/mitchellh/goamz/ec2"
 	"github.com/mitchellh/goamz/elb"
@@ -37,6 +38,10 @@ func (s *StepCreate) Run(state multistep.StateBag) multistep.StepAction {
 		}
 		_, err = clientElb.RegisterInstancesWithLoadBalancer(add)
 		Check(err)
+
+		// Tag the instances so we know what they are.
+		tags := buildTags(state.Get("tags").(string))
+		clientEc2.CreateTags([]string{instance.InstanceId}, tags)
 	}
 
 	return multistep.ActionContinue
@@ -45,4 +50,20 @@ func (s *StepCreate) Run(state multistep.StateBag) multistep.StepAction {
 func (s *StepCreate) Cleanup(multistep.StateBag) {
 	// This is called after all the steps have run or if the runner is
 	// cancelled so that cleanup can be performed.
+}
+
+func buildTags(t string) []ec2.Tag {
+	var tags []ec2.Tag
+
+    tSlice := strings.Split(t, ",")
+    for _, tag := range tSlice {
+        tagSplit := strings.Split(tag, "=")
+        newTag := &ec2.Tag{
+        	Key:   tagSplit[0],
+			Value: tagSplit[0],
+        }
+        tags = append(tags, *newTag)
+    }
+
+    return tags
 }

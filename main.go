@@ -12,7 +12,7 @@ var (
 	elbId    = kingpin.Flag("elb", "Identifier for the Elastic Load Balancer.").Required().String()
 	amiId    = kingpin.Flag("ami", "Identifier for the Image to be deployed.").Required().String()
 	size     = kingpin.Flag("size", "The size of the instance.").Default("t2.medium").String()
-	tags     = kingpin.Flag("tag", "Tag the environment's for billing purposes.").Required().String()
+	tags     = kingpin.Flag("tags", "Tag the environment's for billing purposes.").Required().String()
 	region   = kingpin.Flag("region", "Deploy the images to a Region.").Default("us-east-1").String()
 	security = kingpin.Flag("security", "The security group.").Default("default").String()
 )
