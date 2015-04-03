@@ -11,16 +11,19 @@ import (
 type StepCreate struct{}
 
 func (s *StepCreate) Run(state multistep.StateBag) multistep.StepAction {
-    clientEc2 := state.Get("client_ec2").(ec2.EC2)
-    clientElb := state.Get("client_elb").(elb.ELB)
+    clientEc2 := state.Get("client_ec2").(*ec2.EC2)
+    clientElb := state.Get("client_elb").(*elb.ELB)
 
     ami := state.Get("ami").(string)
     size := state.Get("size").(string)
+    amount := state.Get("amount").(int)
 
     // Spin up the instances.
     options := ec2.RunInstances{
 		ImageId:      ami,
 		InstanceType: size,
+		MinCount:     amount,
+		MaxCount:     amount,
 	}
 	resp, err := clientEc2.RunInstances(&options)
 	Check(err)

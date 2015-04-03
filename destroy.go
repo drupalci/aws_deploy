@@ -3,6 +3,7 @@ package main
 import (
     "fmt"
 
+    "github.com/mitchellh/goamz/ec2"
     "github.com/mitchellh/goamz/elb"
     "github.com/mitchellh/multistep"
 )
@@ -10,7 +11,8 @@ import (
 type StepDestroy struct{}
 
 func (s *StepDestroy) Run(state multistep.StateBag) multistep.StepAction {
-    clientElb := state.Get("client_elb").(elb.ELB)
+    clientEc2 := state.Get("client_ec2").(*ec2.EC2)
+    clientElb := state.Get("client_elb").(*elb.ELB)
     elbId := state.Get("elb").(string)
 
     // This is the query that we will perform to find our load balancer.
@@ -25,11 +27,9 @@ func (s *StepDestroy) Run(state multistep.StateBag) multistep.StepAction {
     bal := bals.LoadBalancers[0]
     for _, instance := range bal.Instances {
         fmt.Println("Removing: ", instance.InstanceId)
-        remove := &elb.DeregisterInstancesFromLoadBalancer{
-            LoadBalancerName: elbId,
-            Instances: []string{instance.InstanceId},
-        }
-        _, err = clientElb.DeregisterInstancesFromLoadBalancer(remove)
+        
+        // Luckily we don't need to worry about deregistering from the Balancer first.
+        _, err := clientEc2.TerminateInstances([]string{instance.InstanceId})
         Check(err)
     }
 
