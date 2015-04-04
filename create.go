@@ -17,18 +17,18 @@ func (s *StepCreate) Run(state multistep.StateBag) multistep.StepAction {
 
 	ami := state.Get("ami").(string)
 	key := state.Get("key").(string)
+	security := state.Get("security").(string)
 	size := state.Get("size").(string)
 	amount := state.Get("amount").(int)
-	security := state.Get("security").(string)
 
 	// Spin up the instances.
 	options := ec2.RunInstances{
 		ImageId:        ami,
 		KeyName:        key,
 		InstanceType:   size,
-		SecurityGroups: ec2.SecurityGroupIds(security),
 		MinCount:       amount,
 		MaxCount:       amount,
+		SecurityGroups: ec2.SecurityGroupIds(security),
 	}
 	resp, err := clientEc2.RunInstances(&options)
 	Check(err)
@@ -59,15 +59,15 @@ func (s *StepCreate) Cleanup(multistep.StateBag) {
 func buildTags(t string) []ec2.Tag {
 	var tags []ec2.Tag
 
-    tSlice := strings.Split(t, ",")
-    for _, tag := range tSlice {
-        tagSplit := strings.Split(tag, "=")
-        newTag := &ec2.Tag{
-        	Key:   tagSplit[0],
+	tSlice := strings.Split(t, ",")
+	for _, tag := range tSlice {
+		tagSplit := strings.Split(tag, "=")
+		newTag := &ec2.Tag{
+			Key:   tagSplit[0],
 			Value: tagSplit[1],
-        }
-        tags = append(tags, *newTag)
-    }
+		}
+		tags = append(tags, *newTag)
+	}
 
-    return tags
+	return tags
 }
