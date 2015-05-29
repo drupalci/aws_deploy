@@ -29,8 +29,8 @@ func main() {
 	state := new(multistep.BasicStateBag)
 
 	// This allows us to share our client connections while in each of the steps.
-	state.Put("client_elb", elb.New(auth, aws.APSoutheast2))
-	state.Put("client_ec2", ec2.New(auth, aws.APSoutheast2))
+	state.Put("client_elb", elb.New(auth, aws.USWest2))
+	state.Put("client_ec2", ec2.New(auth, aws.USWest2))
 
 	// Standard configuration that has been passed in via the CLI.
 	state.Put("elb", *elbId)
