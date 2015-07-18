@@ -15,9 +15,9 @@ build: deps
 
 deps:
 	@echo "Downloading libraries..."
-	@$(GO) get github.com/mitchellh/goamz/aws
-	@$(GO) get github.com/mitchellh/goamz/ec2
-	@$(GO) get github.com/mitchellh/goamz/elb
+	@$(GO) get github.com/aws/aws-sdk-go/aws
+	@$(GO) get github.com/aws/aws-sdk-go/service/ec2
+	@$(GO) get github.com/aws/aws-sdk-go/service/elb
 	@$(GO) get github.com/mitchellh/multistep
 	@$(GO) get gopkg.in/alecthomas/kingpin.v1
 

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/mitchellh/goamz/aws"
-	"github.com/mitchellh/goamz/ec2"
-	"github.com/mitchellh/goamz/elb"
+  "github.com/aws/aws-sdk-go/aws"
+  "github.com/aws/aws-sdk-go/service/ec2"
+  "github.com/aws/aws-sdk-go/service/elb"
 	"github.com/mitchellh/multistep"
 	"gopkg.in/alecthomas/kingpin.v1"
 )
@@ -23,21 +23,18 @@ func main() {
 	kingpin.CommandLine.Help = "AWS deployment tools."
 	kingpin.Parse()
 
-	auth, err := aws.EnvAuth()
-	Check(err)
-
 	state := new(multistep.BasicStateBag)
 
 	// This allows us to share our client connections while in each of the steps.
-	state.Put("client_elb", elb.New(auth, aws.USWest2))
-	state.Put("client_ec2", ec2.New(auth, aws.USWest2))
+  state.Put("client_elb", elb.New(&aws.Config{Region: *region}))
+  state.Put("client_ec2", ec2.New(&aws.Config{Region: *region}))
 
 	// Standard configuration that has been passed in via the CLI.
 	state.Put("elb", *elbId)
 	state.Put("ami", *amiId)
 	state.Put("key", *key)
 	state.Put("size", *size)
-	state.Put("region", aws.Regions[*region])
+	state.Put("region", *region)
 	state.Put("security", *security)
 	state.Put("tags", *tags)
 

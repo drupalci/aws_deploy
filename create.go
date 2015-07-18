@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mitchellh/goamz/ec2"
-	"github.com/mitchellh/goamz/elb"
+  "github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/mitchellh/multistep"
 )
 
@@ -19,33 +20,39 @@ func (s *StepCreate) Run(state multistep.StateBag) multistep.StepAction {
 	key := state.Get("key").(string)
 	security := state.Get("security").(string)
 	size := state.Get("size").(string)
-	amount := state.Get("amount").(int)
+  elbName := state.Get("elb").(string)
 
 	// Spin up the instances.
-	options := ec2.RunInstances{
-		ImageId:        ami,
-		KeyName:        key,
-		InstanceType:   size,
-		MinCount:       amount,
-		MaxCount:       amount,
-		SecurityGroups: ec2.SecurityGroupIds(security),
+	options := &ec2.RunInstancesInput{
+		ImageID:        aws.String(ami),
+		KeyName:        aws.String(key),
+		InstanceType:   aws.String(size),
+		MinCount:       aws.Long(1),
+		MaxCount:       aws.Long(1),
+		SecurityGroups: []*string{ aws.String(security) },
 	}
-	resp, err := clientEc2.RunInstances(&options)
+	resp, err := clientEc2.RunInstances(options)
 	Check(err)
 
 	// Assign these to the correct ELB instance.
 	for _, instance := range resp.Instances {
-		fmt.Println("Creating: ", instance.InstanceId)
-		add := &elb.RegisterInstancesWithLoadBalancer{
-			LoadBalancerName: *elbId,
-			Instances:        []string{instance.InstanceId},
-		}
-		_, err = clientElb.RegisterInstancesWithLoadBalancer(add)
+		fmt.Println("Creating: ", instance.InstanceID)
+    add := &elb.RegisterInstancesWithLoadBalancerInput{
+      Instances: []*elb.Instance{
+        { InstanceID: instance.InstanceID,
+        },
+      },
+      LoadBalancerName: aws.String(elbName),
+    }
+    _, err := clientElb.RegisterInstancesWithLoadBalancer(add)
 		Check(err)
 
 		// Tag the instances so we know what they are.
 		tags := buildTags(state.Get("tags").(string))
-		clientEc2.CreateTags([]string{instance.InstanceId}, tags)
+		clientEc2.CreateTags(&ec2.CreateTagsInput{
+      Resources: []*string{instance.InstanceID},
+      Tags:      tags,
+    })
 	}
 
 	return multistep.ActionContinue
@@ -56,17 +63,17 @@ func (s *StepCreate) Cleanup(multistep.StateBag) {
 	// cancelled so that cleanup can be performed.
 }
 
-func buildTags(t string) []ec2.Tag {
-	var tags []ec2.Tag
+func buildTags(t string) []*ec2.Tag {
+	var tags []*ec2.Tag
 
 	tSlice := strings.Split(t, ",")
 	for _, tag := range tSlice {
 		tagSplit := strings.Split(tag, "=")
 		newTag := &ec2.Tag{
-			Key:   tagSplit[0],
-			Value: tagSplit[1],
+			Key:   aws.String(tagSplit[0]),
+			Value: aws.String(tagSplit[1]),
 		}
-		tags = append(tags, *newTag)
+		tags = append(tags, newTag)
 	}
 
 	return tags
