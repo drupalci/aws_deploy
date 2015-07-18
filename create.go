@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-  "github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/mitchellh/multistep"
@@ -20,8 +20,8 @@ func (s *StepCreate) Run(state multistep.StateBag) multistep.StepAction {
 	key := state.Get("key").(string)
 	security := state.Get("security").(string)
 	size := state.Get("size").(string)
-  elbName := state.Get("elb").(string)
-  amount := state.Get("amount").(int)
+	elbName := state.Get("elb").(string)
+	amount := state.Get("amount").(int)
 
 	// Spin up the instances.
 	options := &ec2.RunInstancesInput{
@@ -38,22 +38,22 @@ func (s *StepCreate) Run(state multistep.StateBag) multistep.StepAction {
 	// Assign these to the correct ELB instance.
 	for _, instance := range resp.Instances {
 		fmt.Println("Creating: ", instance.InstanceID)
-    add := &elb.RegisterInstancesWithLoadBalancerInput{
-      Instances: []*elb.Instance{
-        { InstanceID: instance.InstanceID,
-        },
-      },
-      LoadBalancerName: aws.String(elbName),
-    }
-    _, err := clientElb.RegisterInstancesWithLoadBalancer(add)
+		add := &elb.RegisterInstancesWithLoadBalancerInput{
+			Instances: []*elb.Instance{
+				{ InstanceID: instance.InstanceID,
+			},
+		},
+		LoadBalancerName: aws.String(elbName),
+	}
+	_, err := clientElb.RegisterInstancesWithLoadBalancer(add)
 		Check(err)
 
 		// Tag the instances so we know what they are.
 		tags := buildTags(state.Get("tags").(string))
 		clientEc2.CreateTags(&ec2.CreateTagsInput{
-      Resources: []*string{instance.InstanceID},
-      Tags:      tags,
-    })
+			Resources: []*string{instance.InstanceID},
+			Tags:      tags,
+		})
 	}
 
 	return multistep.ActionContinue

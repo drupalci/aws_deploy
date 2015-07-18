@@ -1,9 +1,9 @@
 package main
 
 import (
-  "github.com/aws/aws-sdk-go/aws"
-  "github.com/aws/aws-sdk-go/service/ec2"
-  "github.com/aws/aws-sdk-go/service/elb"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/mitchellh/multistep"
 	"gopkg.in/alecthomas/kingpin.v1"
 )
@@ -26,8 +26,8 @@ func main() {
 	state := new(multistep.BasicStateBag)
 
 	// This allows us to share our client connections while in each of the steps.
-  state.Put("client_elb", elb.New(&aws.Config{Region: *region}))
-  state.Put("client_ec2", ec2.New(&aws.Config{Region: *region}))
+	state.Put("client_elb", elb.New(&aws.Config{Region: *region}))
+	state.Put("client_ec2", ec2.New(&aws.Config{Region: *region}))
 
 	// Standard configuration that has been passed in via the CLI.
 	state.Put("elb", *elbId)
